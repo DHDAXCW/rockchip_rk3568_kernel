@@ -6,7 +6,8 @@
 
 / {
 	chosen: chosen {
-		bootargs = "earlycon=uart8250,mmio32,0xfe660000 console=ttyFIQ0 root=PARTUUID=614e0000-0000 rw rootwait";
+		bootargs = "earlycon=uart8250,mmio32,0xfe660000 console=ttyFIQ0 rootfstype=ext4 rw rootwait coherent_pool=1m systemd.gpt_auto=0 cgroup_enable=memory swapaccount=1 consoleblank=0 video=HDMI-A-1:e";
+		/* mmcblk0p6: eMMC rootfs, mmcblk1p1: SD rootfs */
 	};
 
 	fiq-debugger {
@@ -39,6 +40,11 @@
 	};
 };
 
+&hdmi_sound {
+	status = "okay";
+	rockchip,jack-det;
+};
+
 &reserved_memory {
 	ramoops: ramoops@110000 {
 		compatible = "ramoops";
@@ -47,6 +53,10 @@
 		console-size = <0x80000>;
 		ftrace-size = <0x00000>;
 		pmsg-size = <0x50000>;
+	};
+
+	dma_trans: dma_trans@3c000000 {
+		reg = <0x0 0x3c000000 0x0 0x04000000>;
 	};
 };
 
@@ -59,5 +69,11 @@
 };
 
 &vop {
+	disable-win-move;
 	disable-afbc-win;
+};
+
+&pcie3x2 {
+        memory-region = <&dma_trans>;
+        busno = <0>;
 };

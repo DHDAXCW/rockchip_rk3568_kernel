@@ -206,6 +206,8 @@ source "net/ipv4/netfilter/Kconfig"
 source "net/ipv6/netfilter/Kconfig"
 source "net/decnet/netfilter/Kconfig"
 source "net/bridge/netfilter/Kconfig"
+source "net/shortcut-fe/Kconfig"
+source "net/fast-classifier/Kconfig"
 
 endif
 
@@ -471,4 +473,7 @@ config HAVE_CBPF_JIT
 
 # Extended BPF JIT (eBPF)
 config HAVE_EBPF_JIT
+	bool
+
+config HAVE_SHORTCUT_FE
 	bool

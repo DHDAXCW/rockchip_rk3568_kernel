@@ -88,3 +88,5 @@ obj-$(CONFIG_QRTR)		+= qrtr/
 obj-$(CONFIG_NET_NCSI)		+= ncsi/
 obj-$(CONFIG_XDP_SOCKETS)	+= xdp/
 obj-$(CONFIG_MPTCP)		+= mptcp/
+obj-$(CONFIG_SHORTCUT_FE)       += shortcut-fe/
+obj-$(CONFIG_FAST_CLASSIFIER)   += fast-classifier/

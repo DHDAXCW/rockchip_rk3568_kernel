@@ -82,4 +82,5 @@
 
 &vop {
 	support-multi-area;
+	disable-afbc-win;
 };

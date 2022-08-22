@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2020 Rockchip Electronics Co., Ltd.
+ *
+ */
+
+/dts-v1/;
+
+#include "rk3568-photonicat.dtsi"
+#include "rk3568-android.dtsi"
+
+/ {
+	model = "Rockchip RK3568 photonicat Linux Board";
+	compatible = "rockchip,rk3568-photonicat", "rockchip,rk3568";
+};
+
+&rockchip_suspend {
+	rockchip,sleep-mode-config = <
+		(0
+		| RKPM_SLP_CENTER_OFF
+		| RKPM_SLP_HW_PLLS_OFF
+		| RKPM_SLP_PMUALIVE_32K
+		| RKPM_SLP_PMIC_LP
+		| RKPM_SLP_32K_PVTM
+		)
+	>;
+	rockchip,wakeup-config = <
+		(0
+		| RKPM_PWM0_WKUP_EN
+		| RKPM_CPU0_WKUP_EN
+		| RKPM_USB_WKUP_EN
+		)
+	>;
+
+        status = "okay";
+};
+
+&rknpu {
+	status = "okay";
+};
+
+&rknpu_mmu {
+	status = "okay";
+};
+
