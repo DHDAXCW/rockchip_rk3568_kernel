@@ -111,7 +111,7 @@
 	gpio-poweroff {
 		compatible = "gpio-poweroff";
 		gpios = <&gpio1 RK_PB2 GPIO_ACTIVE_LOW>;
-		 timeout-ms = <3000>;
+		timeout-ms = <3000>;
 	};
 
 	reserved-memory {
@@ -238,8 +238,8 @@
 };
 
 &i2c3 {
-	status = "okay";
-	clock-frequency = <400000>;
+	status = "disabled";
+	/* clock-frequency = <400000>; */
 
 };
 
