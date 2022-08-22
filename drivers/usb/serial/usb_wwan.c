@@ -468,6 +468,7 @@ static struct urb *usb_wwan_setup_urb(struct usb_serial_port *port,
 	struct usb_serial *serial = port->serial;
 	struct usb_wwan_intf_private *intfdata = usb_get_serial_data(serial);
 	struct urb *urb;
+	struct usb_device_descriptor *desc = &serial->dev->descriptor;
 
 	urb = usb_alloc_urb(0, GFP_KERNEL);	/* No ISO */
 	if (!urb)
@@ -477,9 +478,22 @@ static struct urb *usb_wwan_setup_urb(struct usb_serial_port *port,
 			  usb_sndbulkpipe(serial->dev, endpoint) | dir,
 			  buf, len, callback, ctx);
 
+#if 1 //Added by Quectel for zero packet
+	if (dir == USB_DIR_OUT) {
+		struct usb_device_descriptor *desc = &serial->dev->descriptor;
+		if (desc->idVendor == cpu_to_le16(0x2C7C))
+			urb->transfer_flags |= URB_ZERO_PACKET;
+	}
+#endif
+
 	if (intfdata->use_zlp && dir == USB_DIR_OUT)
 		urb->transfer_flags |= URB_ZERO_PACKET;
 
+	if (dir == USB_DIR_OUT) {
+		if ((desc->idVendor == cpu_to_le16(0x1286) &&
+		     desc->idProduct == cpu_to_le16(0x4e3c)))
+			urb->transfer_flags |= URB_ZERO_PACKET;
+	}
 	return urb;
 }
 

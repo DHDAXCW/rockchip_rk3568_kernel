@@ -75,6 +75,10 @@ static void option_instat_callback(struct urb *urb);
 #define OPTION_PRODUCT_ETNA_KOI_MODEM		0x7100
 #define OPTION_PRODUCT_GTM380_MODEM		0x7201
 
+#define VENDOR_UNISOC            		0x1782
+#define NODECOM_VENDOR_ID			0x1508
+#define FIBOCOM_VENDOR_ID			0x2CB7
+
 #define HUAWEI_VENDOR_ID			0x12D1
 #define HUAWEI_PRODUCT_E173			0x140C
 #define HUAWEI_PRODUCT_E1750			0x1406
@@ -585,8 +589,31 @@ static void option_instat_callback(struct urb *urb);
 /* Device needs ZLP */
 #define ZLP		BIT(17)
 
+struct option_blacklist_info {
+	/* bitfield of interface numbers for OPTION_BLACKLIST_SENDSETUP */
+	const unsigned long sendsetup;
+	/* bitfield of interface numbers for OPTION_BLACKLIST_RESERVED_IF */
+	const unsigned long reserved;
+};
+
+static const struct option_blacklist_info fg621_012 = {
+	.reserved = BIT(0) | BIT(1) | BIT(2),
+};
+
+static const struct option_blacklist_info fg621_014 = {
+	.reserved = BIT(0) | BIT(1) | BIT(4),
+};
+
+static const struct option_blacklist_info fg621_015 = {
+	.reserved = BIT(0) | BIT(1) | BIT(5),
+};
+
+static const struct option_blacklist_info fg621_016 = {
+	.reserved = BIT(0) | BIT(1) | BIT(6),
+};
 
 static const struct usb_device_id option_ids[] = {
+	{ USB_DEVICE(0x1286, 0x4e3c) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_COLT) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA_LIGHT) },
@@ -619,6 +646,41 @@ static const struct usb_device_id option_ids[] = {
 	{ USB_DEVICE(QUANTA_VENDOR_ID, QUANTA_PRODUCT_GLE) },
 	{ USB_DEVICE(QUANTA_VENDOR_ID, 0xea42),
 	  .driver_info = RSVD(4) },
+	/* Fibocom begin */
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0104) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0105) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0106) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0107) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0108) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0109) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x010A) },
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x010B) },
+	{ USB_DEVICE(NODECOM_VENDOR_ID, 0x1000) },
+	{ USB_DEVICE(NODECOM_VENDOR_ID, 0x1001) },
+	{ USB_DEVICE(QUALCOMM_VENDOR_ID, 0x9025) },
+	{ USB_DEVICE(QUALCOMM_VENDOR_ID, 0x90DB) },
+	/* Added by Fibocom 2020-03-12 */
+	{ USB_DEVICE(VENDOR_UNISOC, 0x4028),
+	    .driver_info = (kernel_ulong_t)&fg621_012},
+	{ USB_DEVICE(VENDOR_UNISOC, 0x4030),
+	    .driver_info = (kernel_ulong_t)&fg621_012},
+	{ USB_DEVICE(VENDOR_UNISOC, 0x4032),
+	    .driver_info = (kernel_ulong_t)&fg621_012},
+	{ USB_DEVICE(VENDOR_UNISOC, 0x4033),
+	    .driver_info = (kernel_ulong_t)&fg621_014},
+	{ USB_DEVICE(VENDOR_UNISOC, 0x4D00)},
+
+	/* For Fibocom FG621-EA */
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0A04),
+	    .driver_info = (kernel_ulong_t)&fg621_015},
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0A05),
+	    .driver_info = (kernel_ulong_t)&fg621_016},
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0A06),
+	    .driver_info = (kernel_ulong_t)&fg621_016},
+	{ USB_DEVICE(FIBOCOM_VENDOR_ID, 0x0A07),
+	    .driver_info = (kernel_ulong_t)&fg621_016},
+	/* End of changing by Fibocom 2020-03-12 */
+	/* Fibocom end */
 	{ USB_DEVICE_AND_INTERFACE_INFO(HUAWEI_VENDOR_ID, 0x1c05, USB_CLASS_COMM, 0x02, 0xff) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(HUAWEI_VENDOR_ID, 0x1c1f, USB_CLASS_COMM, 0x02, 0xff) },
 	{ USB_DEVICE_AND_INTERFACE_INFO(HUAWEI_VENDOR_ID, 0x1c23, USB_CLASS_COMM, 0x02, 0xff) },
@@ -2125,6 +2187,24 @@ static const struct usb_device_id option_ids[] = {
 	{ USB_DEVICE_INTERFACE_CLASS(0x305a, 0x1404, 0xff) },			/* GosunCn GM500 RNDIS */
 	{ USB_DEVICE_INTERFACE_CLASS(0x305a, 0x1405, 0xff) },			/* GosunCn GM500 MBIM */
 	{ USB_DEVICE_INTERFACE_CLASS(0x305a, 0x1406, 0xff) },			/* GosunCn GM500 ECM/NCM */
+#if 1 //Added by Quectel
+	{ USB_DEVICE(0x2C7C, 0x0125) }, /* Quectel EC20 R2.0/EC20 R2.1/EC25/EG25-G/EM05 */
+	{ USB_DEVICE(0x2C7C, 0x0121) }, /* Quectel EC21/EG21-G */
+	{ USB_DEVICE(0x2C7C, 0x0191) }, /* Quectel EG91 */
+	{ USB_DEVICE(0x2C7C, 0x0195) }, /* Quectel EG95 */
+	{ USB_DEVICE(0x2C7C, 0x0306) }, /* Quectel EG06/EP06/EM06 */
+	{ USB_DEVICE(0x2C7C, 0x0512) }, /* Quectel EG12/EM12/EG18 */
+	{ USB_DEVICE(0x2C7C, 0x0296) }, /* Quectel BG96 */
+	{ USB_DEVICE(0x2C7C, 0x0700) }, /* Quectel BG95/BG77/BG600L-M3/BC69 */
+	{ USB_DEVICE(0x2C7C, 0x0435) }, /* Quectel AG35 */
+	{ USB_DEVICE(0x2C7C, 0x0415) }, /* Quectel AG15 */
+	{ USB_DEVICE(0x2C7C, 0x0452) }, /* Quectel AG520R */
+	{ USB_DEVICE(0x2C7C, 0x0455) }, /* Quectel AG550R */
+	{ USB_DEVICE(0x2C7C, 0x0620) }, /* Quectel EG20 */
+	{ USB_DEVICE(0x2C7C, 0x0800) }, /* Quectel RG500Q/RM500Q/RG510Q/RM510Q */
+
+	{ USB_DEVICE_AND_INTERFACE_INFO(0x2C7C, 0x0900, 0xff, 0x00, 0x00) }, /* Quectel RM500U-CN */
+#endif
 	{ } /* Terminating entry */
 };
 MODULE_DEVICE_TABLE(usb, option_ids);
@@ -2160,6 +2240,9 @@ static struct usb_serial_driver option_1port_device = {
 #ifdef CONFIG_PM
 	.suspend           = usb_wwan_suspend,
 	.resume            = usb_wwan_resume,
+#if 1 //Added by Quectel
+	.reset_resume = usb_wwan_resume,
+#endif
 #endif
 };
 
@@ -2202,6 +2285,22 @@ static int option_probe(struct usb_serial *serial,
 	 */
 	if (device_flags & NUMEP2 && iface_desc->bNumEndpoints != 2)
 		return -ENODEV;
+
+#if 1 //Added by Quectel
+	//Quectel modules’s interface 4 can be used as USB network device
+	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x2C7C)) {
+		__u16 idProduct = le16_to_cpu(serial->dev->descriptor.idProduct);
+
+		//some interfaces can be used as USB Network device (ecm, rndis, mbim)
+		if (serial->interface->cur_altsetting->desc.bInterfaceClass != 0xFF) {
+			return -ENODEV;
+		}
+		//interface 4 can be used as USB Network device (qmi)
+		else if ((idProduct != 0x6026 && idProduct != 0x6120 && idProduct != 0x900) && serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4) {
+			return -ENODEV;
+		}
+	}
+#endif
 
 	/* Store the device flags so we can use them during attach. */
 	usb_set_serial_data(serial, (void *)device_flags);
