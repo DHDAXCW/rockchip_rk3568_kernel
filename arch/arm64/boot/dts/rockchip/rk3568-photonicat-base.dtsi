@@ -143,7 +143,7 @@
 };
 
 &cpu0 {
-	cpu-supply = <&vdd_cpu>;
+	cpu-supply = <&vdd_logic>;
 };
 
 &cpu0_opp_table {
@@ -216,25 +216,6 @@
 
 &i2c0 {
 	status = "okay";
-
-	vdd_cpu: tcs4525@1c {
-		compatible = "tcs,tcs452x";
-		vsel-gpios = <&gpio0 RK_PA2 GPIO_ACTIVE_HIGH>;
-		reg = <0x1c>;
-		vin-supply = <&vcc5v0_sys>;
-		regulator-compatible = "fan53555-reg";
-		regulator-name = "vdd_cpu";
-		regulator-min-microvolt = <712500>;
-		regulator-max-microvolt = <1390000>;
-		regulator-init-microvolt = <900000>;
-		regulator-ramp-delay = <2300>;
-		fcs,suspend-voltage-selector = <1>;
-		regulator-boot-on;
-		regulator-always-on;
-		regulator-state-mem {
-			regulator-off-in-suspend;
-		};
-	};
 };
 
 &i2s0_8ch {
@@ -469,7 +450,7 @@
 
 &bus_npu {
         bus-supply = <&vdd_logic>;
-        pvtm-supply = <&vdd_cpu>;
+        pvtm-supply = <&vdd_logic>;
         status = "okay";
 };
 
