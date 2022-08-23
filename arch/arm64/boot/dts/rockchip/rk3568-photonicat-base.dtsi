@@ -113,13 +113,14 @@
 		vin-supply = <&vcc5v0_sys>;
 	};
 
-	vdd_logic: vdd-logic {
+	vdd_cpu: vdd-cpu {
 		compatible = "pwm-regulator";
 		pwms = <&pwm1 0 5000 1>;
-		regulator-name = "vdd_logic";
-		regulator-min-microvolt = <800000>;
-		regulator-max-microvolt = <1200000>;
+		regulator-name = "vdd_cpu";
+		regulator-min-microvolt = <712500>;
+		regulator-max-microvolt = <1390000>;
 		regulator-init-microvolt = <900000>;
+		regulator-ramp-delay = <2300>;
 		regulator-always-on;
 		regulator-boot-on;
 		regulator-settling-time-up-us = <250>;
@@ -127,13 +128,14 @@
 		status = "okay";
 	};
 
-	vdd_npu: vdd-npu {
+	vdd_gpu: vdd-gpu {
 		compatible = "pwm-regulator";
 		pwms = <&pwm2 0 5000 1>;
-		regulator-name = "vdd_npu";
-		regulator-min-microvolt = <810000>;
-		regulator-max-microvolt = <1100000>;
-		regulator-init-microvolt = <950000>;
+		regulator-name = "vdd_gpu";
+		regulator-min-microvolt = <800000>;
+		regulator-max-microvolt = <1350000>;
+		regulator-init-microvolt = <900000>;
+		regulator-ramp-delay = <6001>;
 		regulator-always-on;
 		regulator-boot-on;
 		regulator-settling-time-up-us = <250>;
@@ -143,7 +145,7 @@
 };
 
 &cpu0 {
-	cpu-supply = <&vdd_logic>;
+	cpu-supply = <&vdd_cpu>;
 };
 
 &cpu0_opp_table {
@@ -187,7 +189,7 @@
 };
 
 &gpu {
-	mali-supply = <&vdd_npu>;
+	mali-supply = <&vdd_gpu>;
 	status = "okay";
 };
 
@@ -281,7 +283,7 @@
 };
 
 &rknpu {
-	rknpu-supply = <&vdd_npu>;
+	rknpu-supply = <&vdd_gpu>;
 
 	status = "disabled";
 };
@@ -305,7 +307,7 @@
 };
 
 &rkvenc_mmu {
-	venc-supply = <&vdd_logic>;
+	venc-supply = <&vdd_cpu>;
 	status = "okay";
 };
 
@@ -449,8 +451,8 @@
 };
 
 &bus_npu {
-        bus-supply = <&vdd_logic>;
-        pvtm-supply = <&vdd_logic>;
+        bus-supply = <&vdd_cpu>;
+        pvtm-supply = <&vdd_cpu>;
         status = "okay";
 };
 
@@ -460,7 +462,7 @@
 };
 
 &dmc {
-	center-supply = <&vdd_logic>;
+	center-supply = <&vdd_cpu>;
 	auto-freq-en = <0>;
 	status = "okay";
 };
