@@ -24,3 +24,10 @@
 	status = "disabled";
 };
 
+&gpu {
+	interrupt-names = "job", "mmu", "gpu";
+	clocks = <&scmi_clk 1>, <&cru CLK_GPU>;
+	clock-names = "gpu", "bus";
+
+	status = "okay";
+};
