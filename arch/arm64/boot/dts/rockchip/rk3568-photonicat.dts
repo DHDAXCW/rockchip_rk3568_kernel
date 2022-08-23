@@ -15,7 +15,7 @@
 };
 
 &rknpu {
-	rknpu-supply = <&vdd_npu>;
+	rknpu-supply = <&vdd_gpu>;
 
 	status = "disabled";
 };

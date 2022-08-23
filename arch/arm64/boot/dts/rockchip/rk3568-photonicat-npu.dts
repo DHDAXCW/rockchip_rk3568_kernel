@@ -33,7 +33,7 @@
 /*
 	memory-region = <&rknpu_reserved>;
 */
-	rknpu-supply = <&vdd_npu>;
+	rknpu-supply = <&vdd_gpu>;
 
 	status = "okay";
 };
