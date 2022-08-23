@@ -17,3 +17,16 @@
 		bootargs = "earlycon=uart8250,mmio32,0xfe660000 console=ttyFIQ0 rootfstype=squashfs rootwait coherent_pool=1m systemd.gpt_auto=0 cgroup_enable=memory swapaccount=1 consoleblank=0 video=HDMI-A-1:e";
 	};
 };
+
+&gpu {
+	interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>,
+		<GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
+		<GIC_SPI 39 IRQ_TYPE_LEVEL_HIGH>;
+
+	interrupt-names = "job", "mmu", "gpu";
+	clocks = <&scmi_clk 1>, <&cru CLK_GPU>;
+	clock-names = "gpu", "bus";
+
+	status = "okay";
+};
+
