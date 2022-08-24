@@ -113,14 +113,14 @@
 		vin-supply = <&vcc5v0_sys>;
 	};
 
-	vdd_cpu: vdd-cpu {
+	vdd_logic: vdd-logic {
 		compatible = "pwm-regulator";
 		pwms = <&pwm1 0 5000 1>;
-		regulator-name = "vdd_cpu";
-		regulator-min-microvolt = <712500>;
-		regulator-max-microvolt = <1390000>;
+		regulator-name = "vdd_logic";
+		regulator-min-microvolt = <500000>;
+		regulator-max-microvolt = <1350000>;
 		regulator-init-microvolt = <900000>;
-		regulator-ramp-delay = <2300>;
+		regulator-ramp-delay = <6001>;
 		regulator-always-on;
 		regulator-boot-on;
 		regulator-settling-time-up-us = <250>;
@@ -146,10 +146,6 @@
 
 &cpu0 {
 	cpu-supply = <&vdd_cpu>;
-};
-
-&cpu0_opp_table {
-	/delete-node/ opp-1992000000;
 };
 
 &CPU_SLEEP {
@@ -193,10 +189,6 @@
 	status = "okay";
 };
 
-&gpu_opp_table {
-	/delete-node/ opp-800000000;
-};
-
 &hdmi {
 	status = "okay";
 	rockchip,phy-table =
@@ -218,6 +210,27 @@
 
 &i2c0 {
 	status = "okay";
+	i2c-scl-rising-time-ns = <160>;
+	i2c-scl-falling-time-ns = <30>;
+	clock-frequency = <400000>;
+
+	vdd_cpu: tcs4525@1c {
+		compatible = "tcs,tcs452x";
+		reg = <0x1c>;
+		vin-supply = <&vcc3v3_sys>;
+		regulator-compatible = "fan53555-reg";
+		regulator-name = "vdd_cpu";
+		regulator-min-microvolt = <712500>;
+		regulator-max-microvolt = <1390000>;
+		regulator-init-microvolt = <900000>;
+		regulator-ramp-delay = <2300>;
+		fcs,suspend-voltage-selector = <1>;
+		regulator-boot-on;
+		regulator-always-on;
+		regulator-state-mem {
+			regulator-off-in-suspend;
+		};
+	};
 };
 
 &i2s0_8ch {
@@ -293,8 +306,6 @@
 };
 
 &rkvdec {
-	rockchip,disable-auto-freq;
-	assigned-clock-rates = <396000000>, <396000000>, <396000000>, <600000000>;
 	status = "okay";
 };
 
@@ -303,11 +314,11 @@
 };
 
 &rkvenc {
+	venc-supply = <&vdd_logic>;
 	status = "okay";
 };
 
 &rkvenc_mmu {
-	venc-supply = <&vdd_cpu>;
 	status = "okay";
 };
 
@@ -451,7 +462,7 @@
 };
 
 &bus_npu {
-        bus-supply = <&vdd_cpu>;
+        bus-supply = <&vdd_logic>;
         pvtm-supply = <&vdd_cpu>;
         status = "okay";
 };
@@ -462,8 +473,7 @@
 };
 
 &dmc {
-	center-supply = <&vdd_cpu>;
-	auto-freq-en = <0>;
+	center-supply = <&vdd_logic>;
 	status = "okay";
 };
 
