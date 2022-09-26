@@ -9,3 +9,5 @@ obj-$(CONFIG_RFKILL)		+= rfkill.o
 obj-$(CONFIG_RFKILL_GPIO)	+= rfkill-gpio.o
 rfkill-rk-y			+= rfkill-wlan.o rfkill-bt.o
 obj-$(CONFIG_RFKILL_RK)		+= rfkill-rk.o
+
+obj-$(GPIO_RFKILL_GPIO_NEO)	+= rfkill-gpio-neo.o
