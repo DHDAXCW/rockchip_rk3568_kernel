@@ -122,8 +122,8 @@
 		reset-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_HIGH>;
 		block-gpio = <&gpio4 RK_PC4 GPIO_ACTIVE_LOW>;
 		power-on-wait-time = <5000>;
-		reset-wait-time = <3000>;
-		reset-active-time = <100>;
+		reset-wait-time = <5000>;
+		reset-active-time = <300>;
 	};
 
 	reserved-memory {

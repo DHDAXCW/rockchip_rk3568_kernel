@@ -16,6 +16,8 @@
 #include <linux/delay.h>
 #include <linux/kthread.h>
 
+#define RFKILL_GPIO_NEO_THREADED_RESET 0
+
 struct rfkill_gpio_neo_data {
 	const char		*name;
 	enum rfkill_type	type;
@@ -26,6 +28,9 @@ struct rfkill_gpio_neo_data {
 	u32			power_on_wait_time;
 	u32			reset_active_time;
 	u32			reset_wait_time;
+	bool			reset_working;
+
+	u32			block_state;
 
 	struct rfkill		*rfkill_dev;
 };
@@ -34,7 +39,11 @@ static int rfkill_gpio_neo_set_block(void *data, bool blocked)
 {
 	struct rfkill_gpio_neo_data *rfkill = data;
 
-	gpiod_set_value_cansleep(rfkill->block_gpio, blocked);
+	rfkill->block_state = blocked ? 1 : 0;
+
+	if (!rfkill->reset_working) {
+		gpiod_set_value_cansleep(rfkill->block_gpio, blocked);
+	}
 
 	return 0;
 }
@@ -53,14 +62,20 @@ static int rfkill_gpio_neo_do_reset(void *p) {
 		mdelay(10);
 	}
 
-	gpiod_set_value_cansleep(rfkill->reset_gpio, 1);
+	gpiod_set_value(rfkill->reset_gpio, 1);
 	mdelay(rfkill->reset_active_time);
-	gpiod_set_value_cansleep(rfkill->reset_gpio, 0);
+	gpiod_set_value(rfkill->reset_gpio, 0);
 
 	if (rfkill->reset_wait_time > 10) {
 		mdelay(rfkill->reset_wait_time);
 	} else {
 		mdelay(10);
+	}
+
+	rfkill->reset_working = 0;
+
+	if (RFKILL_GPIO_NEO_THREADED_RESET) {
+		gpiod_set_value(rfkill->block_gpio, rfkill->block_state);
 	}
 
 	return 0;
@@ -73,6 +88,7 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 	struct gpio_desc *gpio;
 	const char *type_name;
 	int ret;
+	struct task_struct *tsk;
 
 	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
 	if (!rfkill)
@@ -88,6 +104,8 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 		rfkill->name = dev_name(&pdev->dev);
 
 	rfkill->type = rfkill_find_type(type_name);
+	rfkill->block_state = 0;
+	rfkill->reset_working = 0;
 
 	if (rfkill->power_on_wait_time > 30000) {
 		rfkill->power_on_wait_time = 0;
@@ -113,7 +131,8 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 
 	rfkill->reset_gpio = gpio;
 
-	gpio = devm_gpiod_get(&pdev->dev, "block", GPIOD_OUT_LOW);
+	gpio = devm_gpiod_get(&pdev->dev, "block",
+		RFKILL_GPIO_NEO_THREADED_RESET ? GPIOD_OUT_HIGH : GPIOD_OUT_LOW);
 	if (IS_ERR(gpio))
 		return PTR_ERR(gpio);
 
@@ -140,14 +159,22 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 	dev_info(&pdev->dev, "%s device registered.\n", rfkill->name);
 
 	if (rfkill->power_gpio) {
-		gpiod_set_value_cansleep(rfkill->power_gpio, 1);
+		gpiod_set_value(rfkill->power_gpio, 1);
 	}
-	gpiod_set_value_cansleep(rfkill->block_gpio, 0);
 
 	if (rfkill->reset_gpio) {
-		gpiod_set_value_cansleep(rfkill->reset_gpio, 0);
+		gpiod_set_value(rfkill->reset_gpio, 0);
 
-		rfkill_gpio_neo_do_reset(rfkill);
+		if (RFKILL_GPIO_NEO_THREADED_RESET && rfkill->power_on_wait_time > 10) {
+			tsk = kthread_run(rfkill_gpio_neo_do_reset, rfkill, "rfkill-gpio-neo");
+			if (IS_ERR(tsk)) {
+				dev_err(&pdev->dev, "Start reset thread failed!\n");
+			} else {
+				rfkill->reset_working = 1;
+			}
+		} else {
+			rfkill_gpio_neo_do_reset(rfkill);
+		}
 	}
 
 	return 0;
@@ -162,10 +189,10 @@ static int rfkill_gpio_neo_remove(struct platform_device *pdev)
 {
 	struct rfkill_gpio_neo_data *rfkill = platform_get_drvdata(pdev);
 
-	gpiod_set_value_cansleep(rfkill->block_gpio, 1);
+	gpiod_set_value(rfkill->block_gpio, 1);
 
 	if(rfkill->power_gpio) {
-		gpiod_set_value_cansleep(rfkill->power_gpio, 0);
+		gpiod_set_value(rfkill->power_gpio, 0);
 	}
 
 	rfkill_unregister(rfkill->rfkill_dev);
