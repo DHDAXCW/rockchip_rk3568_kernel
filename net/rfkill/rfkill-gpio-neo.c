@@ -14,6 +14,7 @@
 #include <linux/gpio/consumer.h>
 #include <linux/of_platform.h>
 #include <linux/delay.h>
+#include <linux/kthread.h>
 
 struct rfkill_gpio_neo_data {
 	const char		*name;
@@ -22,13 +23,17 @@ struct rfkill_gpio_neo_data {
 	struct gpio_desc	*reset_gpio;
 	struct gpio_desc	*block_gpio;
 
+	u32			power_on_wait_time;
+	u32			reset_active_time;
+	u32			reset_wait_time;
+
 	struct rfkill		*rfkill_dev;
 };
 
 static int rfkill_gpio_neo_set_block(void *data, bool blocked)
 {
 	struct rfkill_gpio_neo_data *rfkill = data;
-	
+
 	gpiod_set_value_cansleep(rfkill->block_gpio, blocked);
 
 	return 0;
@@ -37,6 +42,30 @@ static int rfkill_gpio_neo_set_block(void *data, bool blocked)
 static const struct rfkill_ops rfkill_gpio_neo_ops = {
 	.set_block = rfkill_gpio_neo_set_block,
 };
+
+
+static int rfkill_gpio_neo_do_reset(void *p) {
+	struct rfkill_gpio_neo_data *rfkill = (struct rfkill_gpio_neo_data *)p;
+
+	if (rfkill->power_on_wait_time > 10) {
+		mdelay(rfkill->power_on_wait_time);
+	} else {
+		mdelay(10);
+	}
+
+	gpiod_set_value_cansleep(rfkill->reset_gpio, 1);
+	mdelay(rfkill->reset_active_time);
+	gpiod_set_value_cansleep(rfkill->reset_gpio, 0);
+
+	if (rfkill->reset_wait_time > 10) {
+		mdelay(rfkill->reset_wait_time);
+	} else {
+		mdelay(10);
+	}
+
+	return 0;
+}
+
 
 static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 {
@@ -51,28 +80,44 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 
 	device_property_read_string(&pdev->dev, "name", &rfkill->name);
 	device_property_read_string(&pdev->dev, "type", &type_name);
+	device_property_read_u32(&pdev->dev, "power-on-wait-time", &rfkill->power_on_wait_time);
+	device_property_read_u32(&pdev->dev, "reset-active-time", &rfkill->reset_active_time);
+	device_property_read_u32(&pdev->dev, "reset-wait-time", &rfkill->reset_wait_time);
+
 	if (!rfkill->name)
 		rfkill->name = dev_name(&pdev->dev);
 
 	rfkill->type = rfkill_find_type(type_name);
 
-	gpio = devm_gpiod_get(dev, "power", GPIOD_OUT_LOW);
+	if (rfkill->power_on_wait_time > 30000) {
+		rfkill->power_on_wait_time = 0;
+	}
+
+	if (rfkill->reset_active_time < 10 || rfkill->reset_active_time > 1000) {
+		rfkill->reset_active_time = 10;
+	}
+
+	if (rfkill->reset_wait_time > 30000) {
+		rfkill->reset_wait_time = 0;
+	}
+
+	gpio = devm_gpiod_get(&pdev->dev, "power", GPIOD_OUT_LOW);
 	if (IS_ERR(gpio))
 		return PTR_ERR(gpio);
 
 	rfkill->power_gpio = gpio;
 
-	gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+	gpio = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_LOW);
 	if (IS_ERR(gpio))
 		return PTR_ERR(gpio);
 
 	rfkill->reset_gpio = gpio;
 
-	gpio = devm_gpiod_get(dev, "block", GPIOD_OUT_LOW);
+	gpio = devm_gpiod_get(&pdev->dev, "block", GPIOD_OUT_LOW);
 	if (IS_ERR(gpio))
 		return PTR_ERR(gpio);
 
-	rfkill->block_gpio = gpio;	
+	rfkill->block_gpio = gpio;
 
 	/* Make sure at-least one GPIO is defined for this instance */
 	if (!rfkill->block_gpio) {
@@ -93,18 +138,16 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, rfkill);
 
 	dev_info(&pdev->dev, "%s device registered.\n", rfkill->name);
-	
-	if(rfkill->power_gpio) {
+
+	if (rfkill->power_gpio) {
 		gpiod_set_value_cansleep(rfkill->power_gpio, 1);
 	}
 	gpiod_set_value_cansleep(rfkill->block_gpio, 0);
 
-	if(rfkill->reset_gpio) {
+	if (rfkill->reset_gpio) {
 		gpiod_set_value_cansleep(rfkill->reset_gpio, 0);
-		mdelay(100);
-		gpiod_set_value_cansleep(rfkill->reset_gpio, 1);
-		mdelay(100);
-		gpiod_set_value_cansleep(rfkill->reset_gpio, 0);
+
+		rfkill_gpio_neo_do_reset(rfkill);
 	}
 
 	return 0;

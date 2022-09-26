@@ -114,6 +114,18 @@
 		timeout-ms = <3000>;
 	};
 
+	modem-rfkill {
+		compatible = "rfkill-gpio-neo";
+		name = "modem-rfkill";
+		type = "wwan";
+		power-gpio = <&gpio4 RK_PC2 GPIO_ACTIVE_HIGH>;
+		reset-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_HIGH>;
+		block-gpio = <&gpio4 RK_PC4 GPIO_ACTIVE_LOW>;
+		power-on-wait-time = <5000>;
+		reset-wait-time = <3000>;
+		reset-active-time = <100>;
+	};
+
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
