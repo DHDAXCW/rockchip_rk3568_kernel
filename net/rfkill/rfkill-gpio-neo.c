@@ -57,9 +57,9 @@ static int rfkill_gpio_neo_do_reset(void *p) {
 	struct rfkill_gpio_neo_data *rfkill = (struct rfkill_gpio_neo_data *)p;
 
 	if (rfkill->power_on_wait_time > 10) {
-		mdelay(rfkill->power_on_wait_time);
+		msleep(rfkill->power_on_wait_time);
 	} else {
-		mdelay(10);
+		msleep(10);
 	}
 
 	gpiod_set_value(rfkill->reset_gpio, 1);
@@ -67,9 +67,9 @@ static int rfkill_gpio_neo_do_reset(void *p) {
 	gpiod_set_value(rfkill->reset_gpio, 0);
 
 	if (rfkill->reset_wait_time > 10) {
-		mdelay(rfkill->reset_wait_time);
+		msleep(rfkill->reset_wait_time);
 	} else {
-		mdelay(10);
+		msleep(10);
 	}
 
 	rfkill->reset_working = 0;
