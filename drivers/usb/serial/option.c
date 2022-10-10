@@ -2302,7 +2302,7 @@ static int option_probe(struct usb_serial *serial,
 
 		/* Workaround: should block modem access for 5s on RM900U. */
 		if (idProduct == 0x900) {
-			mdelay(5000);
+			msleep(5000);
 		}
 	}
 #endif
