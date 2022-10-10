@@ -122,7 +122,7 @@
 		reset-gpio = <&gpio0 RK_PB0 GPIO_ACTIVE_HIGH>;
 		block-gpio = <&gpio4 RK_PC4 GPIO_ACTIVE_LOW>;
 		power-on-wait-time = <500>;
-		reset-wait-time = <500>;
+		reset-wait-time = <0>;
 		reset-active-time = <300>;
 	};
 

@@ -16,7 +16,7 @@
 #include <linux/delay.h>
 #include <linux/kthread.h>
 
-#define RFKILL_GPIO_NEO_THREADED_RESET 0
+#define RFKILL_GPIO_NEO_THREADED_RESET 1
 
 struct rfkill_gpio_neo_data {
 	const char		*name;
@@ -63,7 +63,7 @@ static int rfkill_gpio_neo_do_reset(void *p) {
 	}
 
 	gpiod_set_value(rfkill->reset_gpio, 1);
-	mdelay(rfkill->reset_active_time);
+	msleep(rfkill->reset_active_time);
 	gpiod_set_value(rfkill->reset_gpio, 0);
 
 	if (rfkill->reset_wait_time > 10) {
@@ -161,6 +161,7 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 	if (rfkill->power_gpio) {
 		gpiod_set_value(rfkill->power_gpio, 1);
 	}
+	gpiod_set_value(rfkill->block_gpio, 0);
 
 	if (rfkill->reset_gpio) {
 		gpiod_set_value(rfkill->reset_gpio, 0);

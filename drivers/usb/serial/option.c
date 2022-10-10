@@ -2299,11 +2299,6 @@ static int option_probe(struct usb_serial *serial,
 		else if ((idProduct != 0x6026 && idProduct != 0x6120 && idProduct != 0x900) && serial->interface->cur_altsetting->desc.bInterfaceNumber >= 4) {
 			return -ENODEV;
 		}
-
-		/* Workaround: should block modem access for 5s on RM900U. */
-		if (idProduct == 0x900) {
-			msleep(5000);
-		}
 	}
 #endif
 
