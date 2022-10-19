@@ -249,6 +249,11 @@
 	status = "okay";
 };
 
+&i2c2 {
+	pinctrl-0 = <&i2c2m1_xfer>;
+	status = "okay";
+};
+
 &i2c3 {
 	status = "disabled";
 	/* clock-frequency = <400000>; */
@@ -442,7 +447,7 @@
 &uart9 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart9m1_xfer>;
-	status = "okay";
+	status = "disabled";
 };
 
 &gpio0 {
