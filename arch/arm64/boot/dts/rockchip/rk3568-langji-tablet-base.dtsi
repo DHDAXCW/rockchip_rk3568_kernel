@@ -245,11 +245,11 @@
 };
 
 &edp_in_vp0 {
-	status = "disabled";
+	status = "okay";
 };
 
 &edp_in_vp1 {
-	status = "okay";
+	status = "disabled";
 };
 
 &edp_phy {
@@ -258,6 +258,10 @@
 
 &edp_panel {
 	power-supply = <&vcc3v3_lcd0_n>;
+};
+
+&route_edp {
+	status = "okay";
 };
 
 &gpu {
@@ -281,11 +285,11 @@
 };
 
 &hdmi_in_vp0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &hdmi_in_vp1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &i2c0 {
@@ -686,7 +690,6 @@
 
 &route_hdmi {
 	status = "okay";
-	connect = <&vp0_out_hdmi>;
 };
 
 &saradc {
