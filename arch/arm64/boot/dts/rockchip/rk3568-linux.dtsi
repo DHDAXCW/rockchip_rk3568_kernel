@@ -68,7 +68,3 @@
 	disable-win-move;
 	disable-afbc-win;
 };
-
-&pcie3x2 {
-        busno = <0>;
-};

@@ -231,6 +231,7 @@
 
 &edp {
 	force-hpd;
+	status = "okay";
 
 	ports {
 		port@1 {
@@ -241,8 +242,6 @@
 			};
 		};
 	};
-
-	status = "okay";
 };
 
 &edp_in_vp0 {
@@ -646,6 +645,10 @@
 &pwm2 {
 	status = "okay";
 	pinctrl-names = "active";
+};
+
+&pwm4 {
+	status = "okay";
 };
 
 &rk_rga {

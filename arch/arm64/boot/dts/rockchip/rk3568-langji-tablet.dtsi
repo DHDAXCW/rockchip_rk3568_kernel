@@ -6,7 +6,7 @@
 
 /dts-v1/;
 
-#include "rk3568-photonicat-base.dtsi"
+#include "rk3568-langji-tablet-base.dtsi"
 #include <dt-bindings/clock/rk618-cru.h>
 
 / {
