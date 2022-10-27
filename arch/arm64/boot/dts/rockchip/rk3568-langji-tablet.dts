@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2020 Rockchip Electronics Co., Ltd.
+ *
+ */
+
+/dts-v1/;
+
+#include "rk3568-langji-tablet.dtsi"
+#include "rk3568-linux.dtsi"
+
+/ {
+	model = "Rockchip RK3568 LangJi Tablet Linux Board";
+	compatible = "rockchip,rk3568-langji-tablet", "rockchip,rk3568";
+};
+
+&rknpu {
+	rknpu-supply = <&vdd_npu>;
+
+	status = "okay";
+};
+
+&rknpu_mmu {
+	status = "okay";
+};
+
