@@ -74,9 +74,7 @@ static int rfkill_gpio_neo_do_reset(void *p) {
 
 	rfkill->reset_working = 0;
 
-	if (RFKILL_GPIO_NEO_THREADED_RESET) {
-		gpiod_set_value(rfkill->block_gpio, rfkill->block_state);
-	}
+	gpiod_set_value(rfkill->block_gpio, rfkill->block_state);
 
 	return 0;
 }
@@ -131,8 +129,7 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 
 	rfkill->reset_gpio = gpio;
 
-	gpio = devm_gpiod_get(&pdev->dev, "block",
-		RFKILL_GPIO_NEO_THREADED_RESET ? GPIOD_OUT_HIGH : GPIOD_OUT_LOW);
+	gpio = devm_gpiod_get(&pdev->dev, "block", GPIOD_OUT_HIGH);
 	if (IS_ERR(gpio))
 		return PTR_ERR(gpio);
 
@@ -161,11 +158,8 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 	if (rfkill->power_gpio) {
 		gpiod_set_value(rfkill->power_gpio, 1);
 	}
-	gpiod_set_value(rfkill->block_gpio, 0);
 
 	if (rfkill->reset_gpio) {
-		gpiod_set_value(rfkill->reset_gpio, 0);
-
 		if (RFKILL_GPIO_NEO_THREADED_RESET && rfkill->power_on_wait_time > 10) {
 			tsk = kthread_run(rfkill_gpio_neo_do_reset, rfkill, "rfkill-gpio-neo");
 			if (IS_ERR(tsk)) {
@@ -176,6 +170,9 @@ static int rfkill_gpio_neo_probe(struct platform_device *pdev)
 		} else {
 			rfkill_gpio_neo_do_reset(rfkill);
 		}
+	}
+	else {
+		gpiod_set_value(rfkill->block_gpio, 0);
 	}
 
 	return 0;
