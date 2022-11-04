@@ -18,5 +18,11 @@ config TYPEC_MUX_INTEL_PMC
 	  Driver for USB muxes controlled by Intel PMC FW. Intel PMC FW can
 	  control the USB role switch and also the multiplexer/demultiplexer
 	  switches used with USB Type-C Alternate Modes.
+config TYPEC_SWITCH_SIMPLE
+	tristate "Type-c orientation switch Simple driver"
+	depends on GPIOLIB
+	help
+	  Say Y or M if your system need a simple driver for typec switch
+	  control, like use GPIO to select active channel.
 
 endmenu

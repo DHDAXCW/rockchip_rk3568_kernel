@@ -140,6 +140,7 @@
 		vin-supply = <&vcc5v0_sys>;
 	};
 
+/*
 	vcc5v0_typec: vcc5v0-typec {
 		compatible = "regulator-fixed";
 		enable-active-high;
@@ -152,7 +153,7 @@
 		regulator-max-microvolt = <5000000>;
 		vin-supply = <&vcc5v0_usb>;
 	};
-	
+*/	
 	vcc5v0_host2: vcc5v0-host2-regulator {
 		compatible = "regulator-fixed";
 		enable-active-high;
@@ -589,54 +590,16 @@
 	};
 
 	usbc0: fusb302@22 {
-		compatible = "fcs,fusb302";
+		compatible = "fairchild,fusb302";
 		reg = <0x22>;
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PC5 IRQ_TYPE_LEVEL_LOW>;
 		int-n-gpios = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usbc0_int>;
-		vbus-supply = <&vbus5v0_typec>;
+		fusb340-switch-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
+		vbus-5v-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
 		status = "okay";
-
-		ports {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			port@0 {
-				reg = <0>;
-				usbc0_role_sw: endpoint@0 {
-					remote-endpoint = <&dwc3_0_role_switch>;
-				};
-			};
-		};
-
-		usb_con: connector {
-			compatible = "usb-c-connector";
-			label = "USB-C";
-			data-role = "dual";
-			power-role = "dual";
-			try-power-role = "sink";
-			op-sink-microwatt = <1000000>;
-			sink-pdos =
-				<PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
-				 PDO_FIXED(9000, 3000, PDO_FIXED_USB_COMM)
-				 PDO_FIXED(12000, 3000, PDO_FIXED_USB_COMM)>;
-			source-pdos =
-				<PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)>;
-
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-
-				port@0 {
-					reg = <0>;
-					usbc0_orien_sw: endpoint {
-						remote-endpoint = <&usb2phy0_orientation_switch>;
-					};
-				};
-			};
-		};
 	};
 
 	sc8886: sc8886@6b {
@@ -649,7 +612,7 @@
 		interrupts = <RK_PC2 IRQ_TYPE_LEVEL_LOW>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&charger_ok>;
-		extcon = <&usb2phy0>;
+		extcon = <&usbc0>;
 		ti,charge-current = <2500000>;
 		ti,max-input-voltage = <20000000>;
 		ti,max-input-current = <6000000>;
@@ -662,13 +625,6 @@
 		ti,otg-voltage = <5000000>;
 		ti,otg-current = <1500000>;
 		pd-charge-only = <0>;
-
-		regulators {
-			vbus5v0_typec: vbus5v0-typec {
-				regulator-compatible = "otg-vbus";
-				regulator-name = "vbus5v0_typec";
-			};
-		};
 	};
 };
 
@@ -811,11 +767,11 @@
 };
 
 &u2phy0_host {
+	/* phy-supply = <&vcc5v0_typec>; */
 	status = "okay";
 };
 
 &u2phy0_otg {
-	rockchip,typec-vbus-det;
 	status = "okay";
 };
 
@@ -830,17 +786,8 @@
 };
 
 &usb2phy0 {
-	orientation-switch;
+	extcon = <&usbc0>;
 	status = "okay";
-
-	port {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		usb2phy0_orientation_switch: endpoint@0 {
-			reg = <0>;
-			remote-endpoint = <&usbc0_orien_sw>;
-		};
-	};
 };
 
 &usb2phy1 {
@@ -866,16 +813,7 @@
 &usbdrd_dwc3 {
 	dr_mode = "otg";
 	status = "okay";
-	usb-role-switch;
-
-	port {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		dwc3_0_role_switch: endpoint@0 {
-			reg = <0>;
-			remote-endpoint = <&usbc0_role_sw>;
-		};
-	};
+	extcon = <&usbc0>;
 };
 
 &usbdrd30 {
@@ -924,7 +862,7 @@
 		};
 
 		usbc0_int: usbc0-int {
-			rockchip,pins = <0 RK_PC5 RK_FUNC_GPIO &pcfg_pull_none>;
+			rockchip,pins = <0 RK_PC5 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 
 		vcc5v0_otg_en: vcc5v0-otg-en {

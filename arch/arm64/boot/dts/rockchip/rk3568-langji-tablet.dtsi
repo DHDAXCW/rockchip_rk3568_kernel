@@ -127,6 +127,7 @@
 
 &combphy0_us {
 	status = "okay";
+	extcon = <&usbc0>;
 };
 
 &combphy1_usq {

@@ -3632,6 +3632,7 @@ CONFIG_MFD_TPS6586X=y
 # CONFIG_MFD_INTEL_M10_BMC is not set
 # end of Multifunction device drivers
 
+CONFIG_FUSB_30X=y
 CONFIG_REGULATOR=y
 CONFIG_REGULATOR_DEBUG=y
 CONFIG_REGULATOR_FIXED_VOLTAGE=y
@@ -5126,6 +5127,7 @@ CONFIG_TYPEC_FUSB302=y
 # USB Type-C Multiplexer/DeMultiplexer Switch support
 #
 CONFIG_TYPEC_MUX_PI3USB30532=m
+CONFIG_TYPEC_SWITCH_SIMPLE=y
 # end of USB Type-C Multiplexer/DeMultiplexer Switch support
 
 #
