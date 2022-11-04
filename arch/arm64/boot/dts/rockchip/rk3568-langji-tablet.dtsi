@@ -90,14 +90,15 @@
 	max-frequency = <150000000>;
 	supports-sd;
 	bus-width = <4>;
-	/* cap-sd-highspeed; */
+	cap-sd-highspeed;
 	disable-wp;
-	no-1-8-v;
+	sd-uhs-sdr104;
+	/* no-1-8-v; */
 	vmmc-supply = <&vcc_3v3>;
-	vqmmc-supply = <&vcc_3v3>;
+	vqmmc-supply = <&vccio_sd>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det1>;
-	cd-gpios = <&gpio0 RK_PB5 GPIO_ACTIVE_LOW>;
+	pinctrl-0 = <&sdmmc0_bus4 &sdmmc0_clk &sdmmc0_cmd &sdmmc0_det>;
+	cd-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
@@ -112,8 +113,6 @@
 	cap-sdio-irq;
 	disable-wp;
 	sd-uhs-sdr104;
-	vmmc-supply = <&vcc_3v3>;
-	vqmmc-supply = <&vcc_3v3>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_clk &sdmmc1_cmd>;
 	non-removable;
@@ -156,19 +155,18 @@
 	snps,reset-delays-us = <0 20000 100000>;
 
 	assigned-clocks = <&cru SCLK_GMAC1_RX_TX>, <&cru SCLK_GMAC1>;
-	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>, <&cru CLK_MAC1_2TOP>;
+	assigned-clock-parents = <&cru SCLK_GMAC1_RGMII_SPEED>;
 	assigned-clock-rates = <0>, <125000000>;
 
 	pinctrl-names = "default";
 	pinctrl-0 = <&gmac1m0_miim
-		     &gmac1m0_clkinout
 		     &gmac1m0_rx_bus2
-		     &gmac1m0_tx_bus2
+		     &gmac1m0_tx_bus2_level3
 		     &gmac1m0_rgmii_clk
-		     &gmac1m0_rgmii_bus>;
+		     &gmac1m0_rgmii_bus_level3>;
 
-	tx_delay = <0x30>;
-	rx_delay = <0x10>;
+	tx_delay = <0x3a>;
+	rx_delay = <0x11>;
 
 	phy-handle = <&rgmii_phy>;
 	status = "okay";
@@ -337,18 +335,6 @@
 	status = "disabled";
 };
 
-
-&pinctrl {
-	tf {
-		/omit-if-no-ref/
-		sdmmc0_det1: sdmmc0-det1 {
-			rockchip,pins =
-			/* sdmmc0_det */
-			<0 RK_PB5 RK_FUNC_GPIO &pcfg_pull_up>;
-		};
-	};
-};
-
 &uart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart1m0_xfer &uart1m0_ctsn>;
@@ -365,24 +351,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart9m2_xfer>;
 	status = "okay";
-};
-
-&gpio0 {
-        sd-pwren {
-                gpio-hog;
-                gpios = <RK_PB6 GPIO_ACTIVE_LOW>;
-                output-high;
-                line-name = "sd-pwren";
-        };
-};
-
-&gpio2 {
-	wlan-reg-en {
-                gpio-hog;
-                gpios = <RK_PB1 GPIO_ACTIVE_HIGH>;
-                output-high;
-                line-name = "wlan-reg-en";
-	};
 };
 
 &crypto {

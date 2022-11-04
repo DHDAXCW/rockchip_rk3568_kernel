@@ -13,13 +13,13 @@
 #include <dt-bindings/usb/pd.h>
 
 / {
-	dc_12v: dc-12v {
+	dc_5v: dc-5v {
 		compatible = "regulator-fixed";
-		regulator-name = "dc_12v";
+		regulator-name = "dc_5v";
 		regulator-always-on;
 		regulator-boot-on;
-		regulator-min-microvolt = <12000000>;
-		regulator-max-microvolt = <12000000>;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
 	};
 
 	backlight: backlight {
@@ -117,7 +117,7 @@
 		regulator-boot-on;
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		vin-supply = <&dc_12v>;
+		vin-supply = <&dc_5v>;
 	};
 
 	vcc5v0_sys: vcc5v0-sys {
@@ -127,26 +127,39 @@
 		regulator-boot-on;
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		vin-supply = <&dc_12v>;
+		vin-supply = <&dc_5v>;
 	};
 
-	vcc5v0_host: vcc5v0-host-regulator {
+	vcc5v0_usb: vcc5v0-usb {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_usb";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&vcc5v0_sys>;
+	};
+
+	vcc5v0_typec: vcc5v0-typec {
 		compatible = "regulator-fixed";
 		enable-active-high;
 		gpio = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vcc5v0_host_en>;
-		regulator-name = "vcc5v0_host";
+		regulator-name = "vcc5v0_typec";
 		regulator-always-on;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&vcc5v0_usb>;
 	};
 	
-	vcc5v1_host: vcc5v1-host-regulator {
+	vcc5v0_host2: vcc5v0-host2-regulator {
 		compatible = "regulator-fixed";
 		enable-active-high;
 		gpio = <&gpio0 RK_PA6 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&vcc5v1_host_en>;
-		regulator-name = "vcc5v1_host";
+		pinctrl-0 = <&vcc5v0_host2_en>;
+		regulator-name = "vcc5v0_host2";
 		regulator-always-on;
 	};
 	
@@ -580,6 +593,7 @@
 		reg = <0x22>;
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PC5 IRQ_TYPE_LEVEL_LOW>;
+		int-n-gpios = <&gpio0 RK_PC5 GPIO_ACTIVE_LOW>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usbc0_int>;
 		vbus-supply = <&vbus5v0_typec>;
@@ -618,7 +632,7 @@
 				port@0 {
 					reg = <0>;
 					usbc0_orien_sw: endpoint {
-						remote-endpoint = <&dwc3_0_role_switch>;
+						remote-endpoint = <&usb2phy0_orientation_switch>;
 					};
 				};
 			};
@@ -633,7 +647,6 @@
 
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PC2 IRQ_TYPE_LEVEL_LOW>;
-		otg-mode-en-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&charger_ok>;
 		extcon = <&usb2phy0>;
@@ -649,6 +662,7 @@
 		ti,otg-voltage = <5000000>;
 		ti,otg-current = <1500000>;
 		pd-charge-only = <0>;
+
 		regulators {
 			vbus5v0_typec: vbus5v0-typec {
 				regulator-compatible = "otg-vbus";
@@ -707,12 +721,12 @@
 &pmu_io_domains {
 	status = "okay";
 	pmuio1-supply = <&vcc3v3_pmu>;
-	pmuio2-supply = <&vcc3v3_pmu>;
-	vccio1-supply = <&vcc_3v3>;
-	vccio3-supply = <&vcc_3v3>;
-	vccio4-supply = <&vcc_3v3>;
-	vccio5-supply = <&vcc_3v3>;
-	vccio6-supply = <&vcc_3v3>;
+	pmuio2-supply = <&vcca1v8_pmu>;
+	vccio1-supply = <&vccio_acodec>;
+	vccio3-supply = <&vccio_sd>;
+	vccio4-supply = <&vcc_1v8>;
+	vccio5-supply = <&vcc_1v8>;
+	vccio6-supply = <&vcc_1v8>;
 	vccio7-supply = <&vcc_3v3>;
 };
 
@@ -797,28 +811,36 @@
 };
 
 &u2phy0_host {
-	phy-supply = <&vcc5v0_host>;
 	status = "okay";
 };
 
 &u2phy0_otg {
 	rockchip,typec-vbus-det;
-	phy-supply = <&vcc5v0_host>;
 	status = "okay";
 };
 
 &u2phy1_host {
-	phy-supply = <&vcc5v1_host>;
+	phy-supply = <&vcc5v0_host2>;
 	status = "okay";
 };
 
 &u2phy1_otg {
-	phy-supply = <&vcc5v1_host>;
+	phy-supply = <&vcc5v0_host2>;
 	status = "okay";
 };
 
 &usb2phy0 {
+	orientation-switch;
 	status = "okay";
+
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		usb2phy0_orientation_switch: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&usbc0_orien_sw>;
+		};
+	};
 };
 
 &usb2phy1 {
@@ -843,7 +865,6 @@
 
 &usbdrd_dwc3 {
 	dr_mode = "otg";
-	extcon = <&usb2phy0>;
 	status = "okay";
 	usb-role-switch;
 
@@ -910,7 +931,7 @@
 			rockchip,pins = <4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 		
-		vcc5v1_host_en: vcc5v1-host-en {
+		vcc5v0_host2_en: vcc5v0-host2-en {
 			rockchip,pins = <0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
