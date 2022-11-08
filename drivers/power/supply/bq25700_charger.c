@@ -1305,6 +1305,13 @@ static irqreturn_t bq25700_irq_handler_thread(int irq, void *private)
 
 	if (bq25700_field_read(charger, AC_STAT)) {
 		irq_flag = IRQF_TRIGGER_LOW;
+		bq25700_field_write(charger, INPUT_CURRENT,
+				    charger->init_data.input_current_cdp);
+		bq25700_field_write(charger, CHARGE_CURRENT,
+				    charger->init_data.ichg);
+		bq25700_get_chip_state(charger, &state);
+		charger->state = state;
+		power_supply_changed(charger->supply_charger);
 	} else {
 		irq_flag = IRQF_TRIGGER_HIGH;
 		bq25700_field_write(charger, INPUT_CURRENT,

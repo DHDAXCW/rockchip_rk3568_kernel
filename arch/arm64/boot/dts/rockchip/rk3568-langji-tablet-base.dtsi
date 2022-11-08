@@ -62,6 +62,23 @@
 		default-brightness-level = <200>;
 	};
 
+	rk809_sound: rk809-sound {
+		status = "okay";
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,name = "rockchip,rk809-codec";
+		simple-audio-card,mclk-fs = <256>;
+
+		simple-audio-card,aux-devs = <&speaker_amp>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s1_8ch>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&rk809_codec>;
+		};
+	};
+	
 	hdmi_sound: hdmi-sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
@@ -73,25 +90,10 @@
 				sound-dai = <&i2s0_8ch>;
 		};
 		simple-audio-card,codec {
-				sound-dai = <&hdmi>;
+				sound-dai = <&hdmi>;   
 		};
 	};
-	
-	rk809_sound: rk809-sound {
-		status = "okay";
-		compatible = "simple-audio-card";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "rockchip,rk809-codec";
-		simple-audio-card,mclk-fs = <256>;
 
-		simple-audio-card,cpu {
-			sound-dai = <&i2s1_8ch>;
-		};
-		simple-audio-card,codec {
-			sound-dai = <&rk809_codec>;
-		};
-	};
-	
 	spdif-sound {
 		status = "okay";
 		compatible = "simple-audio-card";
@@ -140,20 +142,6 @@
 		vin-supply = <&vcc5v0_sys>;
 	};
 
-/*
-	vcc5v0_typec: vcc5v0-typec {
-		compatible = "regulator-fixed";
-		enable-active-high;
-		gpio = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vcc5v0_host_en>;
-		regulator-name = "vcc5v0_typec";
-		regulator-always-on;
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		vin-supply = <&vcc5v0_usb>;
-	};
-*/	
 	vcc5v0_host2: vcc5v0-host2-regulator {
 		compatible = "regulator-fixed";
 		enable-active-high;
@@ -175,6 +163,19 @@
 			regulator-off-in-suspend;
 		};
 	};
+
+	vcc5v0_usbts: vcc5v0-usbts {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_usbts";
+		regulator-boot-on;
+		gpio = <&gpio0 RK_PB6 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+
+		regulator-state-mem {
+			regulator-off-in-suspend;
+		};
+	};
 	
 	edp_panel: edp_panel {
 		compatible = "simple-panel";
@@ -182,7 +183,6 @@
 		prepare-delay-ms = <20>;
 		enable-delay-ms = <20>;
 		reset-delay-ms = <20>;
-		bpc = <8>;
 
 		display-timings {
 			native-mode = <&timing0>;
@@ -205,11 +205,28 @@
 		};
 
 		ports {
-			panel_in: endpoint {
-				remote-endpoint = <&edp_out>;
+			panel_in_edp: endpoint {
+				remote-endpoint = <&edp_out_panel>;
 			};
 		};
 	};
+
+	speaker_amp: speaker-amplifier {  
+		compatible = "simple-audio-amplifier";
+		enable-gpios = <&gpio4 RK_PC6 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "Speaker Amplifier";
+		VCC-supply = <&dc_5v>;
+	};
+/*
+	mains_charger: dc-charger {
+		compatible = "gpio-charger";
+		charger-type = "mains";
+		gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_LOW>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&dc_det_pin>;
+	};
+*/
 };
 
 &cpu0 {
@@ -241,11 +258,11 @@
 	status = "okay";
 
 	ports {
-		port@1 {
+		edp_out: port@1 {
 			reg = <1>;
 
-			edp_out: endpoint {
-				remote-endpoint = <&panel_in>;
+			edp_out_panel: endpoint {
+				remote-endpoint = <&panel_in_edp>;
 			};
 		};
 	};
@@ -477,8 +494,8 @@
 			vccio_acodec: LDO_REG4 {
 				regulator-always-on;
 				regulator-boot-on;
-				regulator-min-microvolt = <1800000>;
-				regulator-max-microvolt = <1800000>;
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
 				regulator-name = "vccio_acodec";
 				regulator-state-mem {
 					regulator-off-in-suspend;
@@ -587,6 +604,29 @@
 			mic-in-differential;
 			status = "okay";
 		};
+
+		battery {
+			compatible = "rk817,battery";
+			ocv_table = <6800 6894 6970 7048 7108 7160 7194
+					7222 7248 7282 7324 7398 7484 7564
+					7650 7746 7850 7956 8066 8182 8330>;
+			design_capacity = <6000>;
+			design_qmax = <6200>;
+			bat_res = <100>;
+			sleep_enter_current = <300>;
+			sleep_exit_current = <300>;
+			sleep_filter_current = <100>;
+			power_off_thresd = <7000>;
+			zero_algorithm_vol = <7700>;
+			max_soc_offset = <60>;
+			monitor_sec = <5>;
+			sample_res = <10>;
+			virtual_power = <0>;
+			bat_res_up = <140>;
+			bat_res_down = <20>;
+
+			power-supplies = <&usbc0>;
+		};
 	};
 
 	usbc0: fusb302@22 {
@@ -598,7 +638,9 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&usbc0_int>;
 		fusb340-switch-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
-		vbus-5v-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
+		/* vbus-5v-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>; */
+		charge-dev = <&sc8886>;
+		support-uboot-charge = <1>;
 		status = "okay";
 	};
 
@@ -616,7 +658,7 @@
 		ti,charge-current = <2500000>;
 		ti,max-input-voltage = <20000000>;
 		ti,max-input-current = <6000000>;
-		ti,max-charge-voltage = <8750000>;
+		ti,max-charge-voltage = <8400000>;
 		ti,input-current = <500000>;
 		ti,input-current-sdp = <500000>;
 		ti,input-current-dcp = <2000000>;
@@ -625,6 +667,7 @@
 		ti,otg-voltage = <5000000>;
 		ti,otg-current = <1500000>;
 		pd-charge-only = <0>;
+		otg-mode-en-gpios = <&gpio3 RK_PC3 GPIO_ACTIVE_HIGH>;
 	};
 };
 
@@ -767,7 +810,6 @@
 };
 
 &u2phy0_host {
-	/* phy-supply = <&vcc5v0_typec>; */
 	status = "okay";
 };
 
@@ -877,6 +919,12 @@
 	charger {
 		charger_ok: charger_ok {
 			rockchip,pins = <0 RK_PC2 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	dc-charger {
+		dc_det_pin: dc-det-pin {  
+			rockchip,pins = <2 RK_PC1 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
