@@ -217,16 +217,6 @@
 		sound-name-prefix = "Speaker Amplifier";
 		VCC-supply = <&dc_5v>;
 	};
-/*
-	mains_charger: dc-charger {
-		compatible = "gpio-charger";
-		charger-type = "mains";
-		gpios = <&gpio2 RK_PC1 GPIO_ACTIVE_LOW>;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&dc_det_pin>;
-	};
-*/
 };
 
 &cpu0 {
