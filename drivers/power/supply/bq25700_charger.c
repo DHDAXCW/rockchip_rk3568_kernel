@@ -83,7 +83,7 @@ enum bq25700_fields {
 	/*reg34h*/
 	ADC_CONV, ADC_START, ADC_FULLSCALE, EN_ADC_CMPIN, EN_ADC_VBUS,
 	EN_ADC_PSYS, EN_ADC_IIN, EN_ADC_IDCHG, EN_ADC_ICHG, EN_ADC_VSYS,
-	EN_ADC_VBAT,/*reg35h*/
+	EN_ADC_VBAT,OTG_VOLTAGE_OFFSET_SEL,/*reg35h*/
 
 	OTG_VOLTAGE,/*reg3bh*/
 	OTG_CURRENT,/*reg3ch*/
@@ -198,6 +198,7 @@ struct bq25700_device {
 	int				pd_charge_only;
 	unsigned int			bc_event;
 	bool				usb_bc;
+	bool				is_sc8886;
 };
 
 static const struct reg_field bq25700_reg_fields[] = {
@@ -478,6 +479,147 @@ static const struct reg_field bq25703_reg_fields[] = {
 	[DEVICE_ID] = REG_FIELD(0x2F, 0, 7),
 };
 
+static const struct reg_field sc8886_reg_fields[] = {
+	/*REG00*/
+	[EN_LWPWR] = REG_FIELD(0x00, 15, 15),
+	[WDTWR_ADJ] = REG_FIELD(0x00, 13, 14),
+	[IDPM_AUTO_DISABLE] = REG_FIELD(0x00, 12, 12),
+	[EN_OOA] = REG_FIELD(0x00, 10, 10),
+	[PWM_FREQ] = REG_FIELD(0x00, 9, 9),
+	[EN_LEARN] = REG_FIELD(0x00, 5, 5),
+	[IADP_GAIN] = REG_FIELD(0x00, 4, 4),
+	[IBAT_GAIN] = REG_FIELD(0x00, 3, 3),
+	[EN_LDO] = REG_FIELD(0x00, 2, 2),
+	[EN_IDPM] = REG_FIELD(0x00, 1, 1),
+	[CHRG_INHIBIT] = REG_FIELD(0x00, 0, 0),
+	/*REG0x02*/
+	[CHARGE_CURRENT] = REG_FIELD(0x02, 6, 12),
+	/*REG0x04*/
+	[MAX_CHARGE_VOLTAGE] = REG_FIELD(0x04, 4, 14),
+	/*REG20*/
+	[AC_STAT] = REG_FIELD(0x20, 15, 15),
+	[ICO_DONE] = REG_FIELD(0x20, 14, 14),
+	[IN_VINDPM] = REG_FIELD(0x20, 12, 12),
+	[IN_IINDPM] = REG_FIELD(0x20, 11, 11),
+	[IN_FCHRG] = REG_FIELD(0x20, 10, 10),
+	[IN_PCHRG] = REG_FIELD(0x20, 9, 9),
+	[IN_OTG] = REG_FIELD(0x20, 8, 8),
+	[F_ACOV] = REG_FIELD(0x20, 7, 7),
+	[F_BATOC] = REG_FIELD(0x20, 6, 6),
+	[F_ACOC] = REG_FIELD(0x20, 5, 5),
+	[SYSOVP_STAT] = REG_FIELD(0x20, 4, 4),
+	[F_LATCHOFF] = REG_FIELD(0x20, 2, 2),
+	[F_OTG_OVP] = REG_FIELD(0x20, 1, 1),
+	[F_OTG_OCP] = REG_FIELD(0x20, 0, 0),
+	/*REG22*/
+	[STAT_COMP] = REG_FIELD(0x22, 6, 6),
+	[STAT_ICRIT] = REG_FIELD(0x22, 5, 5),
+	[STAT_INOM] = REG_FIELD(0x22, 4, 4),
+	[STAT_IDCHG] = REG_FIELD(0x22, 3, 3),
+	[STAT_VSYS] = REG_FIELD(0x22, 2, 2),
+	[STAT_BAT_REMOV] = REG_FIELD(0x22, 1, 1),
+	[STAT_ADP_REMOV] = REG_FIELD(0x22, 0, 0),
+	/*REG24*/
+	[INPUT_CURRENT_DPM] = REG_FIELD(0x24, 8, 14),
+
+	/*REG26H*/
+	[OUTPUT_INPUT_VOL] = REG_FIELD(0x26, 8, 15),
+	[OUTPUT_SYS_POWER] = REG_FIELD(0x26, 0, 7),
+	/*REG28H*/
+	[OUTPUT_DSG_CUR] = REG_FIELD(0x28, 8, 14),
+	[OUTPUT_CHG_CUR] = REG_FIELD(0x28, 0, 6),
+	/*REG2aH*/
+	[OUTPUT_INPUT_CUR] = REG_FIELD(0x2a, 8, 15),
+	[OUTPUT_CMPIN_VOL] = REG_FIELD(0x2a, 0, 7),
+	/*REG2cH*/
+	[OUTPUT_SYS_VOL] = REG_FIELD(0x2c, 8, 15),
+	[OUTPUT_BAT_VOL] = REG_FIELD(0x2c, 0, 6),
+
+	/*REG30*/
+	[EN_IBAT] = REG_FIELD(0x30, 15, 15),
+	[EN_PROCHOT_LPWR] = REG_FIELD(0x30, 13, 14),
+	[EN_PSYS] = REG_FIELD(0x30, 12, 12),
+	[RSNS_RAC] = REG_FIELD(0x30, 11, 11),
+	[RSNS_RSR] = REG_FIELD(0x30, 10, 10),
+	[PSYS_RATIO] = REG_FIELD(0x30, 9, 9),
+	[CMP_REF] = REG_FIELD(0x30, 7, 7),
+	[CMP_POL] = REG_FIELD(0x30, 6, 6),
+	[CMP_DEG] = REG_FIELD(0x30, 4, 5),
+	[FORCE_LATCHOFF] = REG_FIELD(0x30, 3, 3),
+	[EN_SHIP_DCHG] = REG_FIELD(0x30, 1, 1),
+	[AUTO_WAKEUP_EN] = REG_FIELD(0x30, 0, 0),
+	/*REG32*/
+	[PKPWR_TOVLD_REG] = REG_FIELD(0x32, 14, 15),
+	[EN_PKPWR_IDPM] = REG_FIELD(0x32, 13, 13),
+	[EN_PKPWR_VSYS] = REG_FIELD(0x32, 12, 12),
+	[PKPWER_OVLD_STAT] = REG_FIELD(0x32, 11, 11),
+	[PKPWR_RELAX_STAT] = REG_FIELD(0x32, 10, 10),
+	[PKPWER_TMAX] = REG_FIELD(0x32, 8, 9),
+	[EN_EXTILIM] = REG_FIELD(0x32, 7, 7),
+	[EN_ICHG_IDCHG] = REG_FIELD(0x32, 6, 6),
+	[Q2_OCP] = REG_FIELD(0x32, 5, 5),
+	[ACX_OCP] = REG_FIELD(0x32, 4, 4),
+	[EN_ACOC] = REG_FIELD(0x32, 3, 3),
+	[ACOC_VTH] = REG_FIELD(0x32, 2, 2),
+	[EN_BATOC] = REG_FIELD(0x32, 1, 1),
+	[BATCOC_VTH] = REG_FIELD(0x32, 0, 0),
+	/*REG34*/
+	[EN_HIZ] = REG_FIELD(0x34, 15, 15),
+	[RESET_REG] = REG_FIELD(0x34, 14, 14),
+	[RESET_VINDPM] = REG_FIELD(0x34, 13, 13),
+	[EN_OTG] = REG_FIELD(0x34, 12, 12),
+	[EN_ICO_MODE] = REG_FIELD(0x34, 11, 11),
+	[OTG_VOLTAGE_OFFSET_SEL] = REG_FIELD(0x34, 2, 2),
+	[BATFETOFF_HIZ] = REG_FIELD(0x34, 1, 1),
+	[PSYS_OTG_IDCHG] = REG_FIELD(0x34, 0, 0),
+	/*REG36*/
+	[ILIM2_VTH] = REG_FIELD(0x36, 11, 15),
+	[ICRIT_DEG] = REG_FIELD(0x36, 9, 10),
+	[VSYS_VTH] = REG_FIELD(0x36, 6, 7),
+	[EN_PROCHOT_EXT] = REG_FIELD(0x36, 5, 5),
+	[PROCHOT_WIDTH] = REG_FIELD(0x36, 3, 4),
+	[PROCHOT_CLEAR] = REG_FIELD(0x36, 2, 2),
+	[INOM_DEG] = REG_FIELD(0x36, 1, 1),
+	/*REG38*/
+	[IDCHG_VTH] = REG_FIELD(0x38, 10, 15),
+	[IDCHG_DEG] = REG_FIELD(0x38, 8, 9),
+	[PROCHOT_PROFILE_COMP] = REG_FIELD(0x38, 6, 6),
+	[PROCHOT_PROFILE_ICRIT] = REG_FIELD(0x38, 5, 5),
+	[PROCHOT_PROFILE_INOM] = REG_FIELD(0x38, 4, 4),
+	[PROCHOT_PROFILE_IDCHG] = REG_FIELD(0x38, 3, 3),
+	[PROCHOT_PROFILE_VSYS] = REG_FIELD(0x38, 2, 2),
+	[PROCHOT_PROFILE_BATPRES] = REG_FIELD(0x38, 1, 1),
+	[PROCHOT_PROFILE_ACOK] = REG_FIELD(0x38, 0, 0),
+	/*REG3a*/
+	[ADC_CONV] = REG_FIELD(0x3a, 15, 15),
+	[ADC_START] = REG_FIELD(0x3a, 14, 14),
+	[ADC_FULLSCALE] = REG_FIELD(0x3a, 13, 13),
+	[EN_ADC_CMPIN] = REG_FIELD(0x3a, 7, 7),
+	[EN_ADC_VBUS] = REG_FIELD(0x3a, 6, 6),
+	[EN_ADC_PSYS] = REG_FIELD(0x3a, 5, 5),
+	[EN_ADC_IIN] = REG_FIELD(0x3a, 4, 4),
+	[EN_ADC_IDCHG] = REG_FIELD(0x3a, 3, 3),
+	[EN_ADC_ICHG] = REG_FIELD(0x3a, 2, 2),
+	[EN_ADC_VSYS] = REG_FIELD(0x3a, 1, 1),
+	[EN_ADC_VBAT] = REG_FIELD(0x3a, 0, 0),
+
+	/*REG06*/
+	[OTG_VOLTAGE] = REG_FIELD(0x06, 2, 13),
+	/*REG08*/
+	[OTG_CURRENT] = REG_FIELD(0x08, 8, 14),
+	/*REG0a*/
+	[INPUT_VOLTAGE] = REG_FIELD(0x0a, 6, 13),
+	/*REG0C*/
+	[MIN_SYS_VOTAGE] = REG_FIELD(0x0c, 8, 13),
+	/*REG0e*/
+	[INPUT_CURRENT] = REG_FIELD(0x0e, 8, 14),
+
+	/*REG2E*/
+	[MANUFACTURE_ID] = REG_FIELD(0x2E, 0, 7),
+	/*REF2F*/
+	[DEVICE_ID] = REG_FIELD(0x2F, 0, 7),
+};
+
 /*
  * Most of the val -> idx conversions can be computed, given the minimum,
  * maximum and the step between values. For the rest of conversions, we use
@@ -493,6 +635,7 @@ enum bq25700_table_ids {
 	TBL_OTGVOL,
 	TBL_OTGCUR,
 	TBL_EXTCON,
+	TBL_OTGVOL_SC8886,
 };
 
 struct bq25700_range {
@@ -524,6 +667,8 @@ static const union {
 	[TBL_OTGVOL] = {.rt = {4480000, 20800000, 64000} },
 	/*uV OTG volage*/
 	[TBL_OTGCUR] = {.rt = {0, 6350000, 50000} },
+	/* uV min system voltage for SC8886*/
+	[TBL_OTGVOL_SC8886] = {.rt = {1280000, 20800000, 8000} },
 };
 
 static const struct regmap_range bq25700_readonly_reg_ranges[] = {
@@ -909,6 +1054,10 @@ static int bq25700_fw_read_u32_props(struct bq25700_device *charger)
 		 &init->otg_current},
 	};
 
+	if(charger->is_sc8886) {
+		props[6].tbl_id = TBL_OTGVOL_SC8886;
+	}
+
 	/* initialize data for optional properties */
 	for (i = 0; i < ARRAY_SIZE(props); i++) {
 		ret = device_property_read_u32(charger->dev, props[i].name,
@@ -940,9 +1089,14 @@ static int bq25700_fw_read_u32_props(struct bq25700_device *charger)
 			dev_err(charger->dev, "ti,ti,otg-voltage is error\n");
 			return -ENODEV;
 		}
-		if ((props[i].tbl_id == TBL_OTGVOL) &&
+		if ((props[i].tbl_id == TBL_OTGCUR) &&
 		    (property > MAX_OTGCURRENT)) {
 			dev_err(charger->dev, "ti,otg-current is error\n");
+			return -ENODEV;
+		}
+		if ((props[i].tbl_id == TBL_OTGVOL_SC8886) &&
+		    (property > MAX_OTGVOLTAGE)) {
+			dev_err(charger->dev, "ti,ti,otg-voltage is error\n");
 			return -ENODEV;
 		}
 
@@ -1305,13 +1459,6 @@ static irqreturn_t bq25700_irq_handler_thread(int irq, void *private)
 
 	if (bq25700_field_read(charger, AC_STAT)) {
 		irq_flag = IRQF_TRIGGER_LOW;
-		bq25700_field_write(charger, INPUT_CURRENT,
-				    charger->init_data.input_current_cdp);
-		bq25700_field_write(charger, CHARGE_CURRENT,
-				    charger->init_data.ichg);
-		bq25700_get_chip_state(charger, &state);
-		charger->state = state;
-		power_supply_changed(charger->supply_charger);
 	} else {
 		irq_flag = IRQF_TRIGGER_HIGH;
 		bq25700_field_write(charger, INPUT_CURRENT,
@@ -1988,16 +2135,36 @@ static int bq25700_probe(struct i2c_client *client,
 			return -EINVAL;
 		}
 
-		for (i = 0; i < ARRAY_SIZE(bq25703_reg_fields); i++) {
-			const struct reg_field *reg_fields = bq25703_reg_fields;
+		charger_np = of_find_compatible_node(NULL, NULL, "southchip,sc8886");
 
-			charger->rmap_fields[i] =
-				devm_regmap_field_alloc(dev,
-							charger->regmap,
-							reg_fields[i]);
-			if (IS_ERR(charger->rmap_fields[i])) {
-				dev_err(dev, "cannot allocate regmap field\n");
-				return PTR_ERR(charger->rmap_fields[i]);
+		if (charger_np) {
+			charger->is_sc8886 = 1;
+			for (i = 0; i < ARRAY_SIZE(sc8886_reg_fields); i++) {
+				const struct reg_field *reg_fields = sc8886_reg_fields;
+
+				charger->rmap_fields[i] =
+					devm_regmap_field_alloc(dev,
+								charger->regmap,
+								reg_fields[i]);
+				if (IS_ERR(charger->rmap_fields[i])) {
+					dev_err(dev, "cannot allocate regmap field\n");
+					return PTR_ERR(charger->rmap_fields[i]);
+				}
+			}
+			bq25700_field_write(charger, OTG_VOLTAGE_OFFSET_SEL, 0);
+
+		} else {
+			for (i = 0; i < ARRAY_SIZE(bq25703_reg_fields); i++) {
+				const struct reg_field *reg_fields = bq25703_reg_fields;
+
+				charger->rmap_fields[i] =
+					devm_regmap_field_alloc(dev,
+								charger->regmap,
+								reg_fields[i]);
+				if (IS_ERR(charger->rmap_fields[i])) {
+					dev_err(dev, "cannot allocate regmap field\n");
+					return PTR_ERR(charger->rmap_fields[i]);
+				}
 			}
 		}
 	}
