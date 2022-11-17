@@ -160,3 +160,6 @@ x509.genkey
 
 # Documentation toolchain
 sphinx_*/
+
+/logo.bmp
+/logo_kernel.bmp
